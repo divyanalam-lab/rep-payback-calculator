@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sales Rep Payback Calculator</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+:root {
+  --bg: #FAFAF8;
+  --surface: #FFFFFF;
+  --surface2: #F4F3F0;
+  --border: #E8E6E1;
+  --border-strong: #D4D1CA;
+  --text: #1A1A18;
+  --text2: #6B6A65;
+  --text3: #9C9A92;
+  --accent: #1D6B4F;
+  --accent-light: #E8F5EE;
+  --accent2: #B85C3A;
+  --accent2-light: #FFF3ED;
+  --danger: #C43C3C;
+  --danger-light: #FFF0F0;
+  --success: #1D6B4F;
+  --font: 'DM Sans', -apple-system, sans-serif;
+  --mono: 'JetBrains Mono', monospace;
+  --radius: 10px;
+  --radius-lg: 14px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+.container {
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 4rem;
+}
+
+header {
+  margin-bottom: 2.5rem;
+}
+
+header h1 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  margin-bottom: 0.25rem;
+}
+
+header p {
+  font-size: 0.8rem;
+  color: var(--text2);
+  max-width: 520px;
+}
+
+.section-label {
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text3);
+  margin-bottom: 0.75rem;
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.inputs-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem 2rem;
+}
+
+.input-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.3rem 0;
+}
+
+.input-row label {
+  font-size: 0.75rem;
+  color: var(--text2);
+  min-width: 155px;
+  flex-shrink: 0;
+}
+
+.input-row input[type=range] {
+  flex: 1;
+  height: 4px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: var(--border);
+  border-radius: 2px;
+  outline: none;
+}
+
+.input-row input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--accent);
+  cursor: pointer;
+  border: 2px solid var(--surface);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+}
+
+.input-row select {
+  flex: 1;
+  padding: 0.3rem 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-family: var(--font);
+  font-size: 0.75rem;
+  color: var(--text);
+  background: var(--surface);
+  cursor: pointer;
+}
+
+.input-row .val {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  font-weight: 500;
+  min-width: 42px;
+  text-align: right;
+  color: var(--text);
+}
+
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.metric-card {
+  background: var(--surface2);
+  border-radius: var(--radius);
+  padding: 0.75rem 1rem;
+}
+
+.metric-card.highlight {
+  background: var(--accent-light);
+}
+
+.metric-card .m-label {
+  font-size: 0.65rem;
+  color: var(--text3);
+  margin-bottom: 0.15rem;
+  font-weight: 500;
+}
+
+.metric-card .m-value {
+  font-family: var(--mono);
+  font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.metric-card.highlight .m-value {
+  color: var(--accent);
+}
+
+.chart-wrap {
+  position: relative;
+  width: 100%;
+  height: 240px;
+  margin-bottom: 0.5rem;
+}
+
+.legend {
+  display: flex;
+  gap: 1.25rem;
+  margin-bottom: 1rem;
+  font-size: 0.7rem;
+  color: var(--text2);
+}
+
+.legend span {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.legend .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.table-wrap {
+  max-height: 420px;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.table-wrap table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.7rem;
+}
+
+.table-wrap th {
+  text-align: left;
+  font-weight: 600;
+  font-size: 0.65rem;
+  letter-spacing: 0.02em;
+  color: var(--text3);
+  padding: 0.5rem 0.5rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.table-wrap td {
+  padding: 0.35rem 0.5rem;
+  border-bottom: 1px solid var(--border);
+  font-family: var(--mono);
+  font-size: 0.65rem;
+}
+
+.table-wrap tr.brk {
+  background: var(--accent-light);
+}
+
+.table-wrap td.pos {
+  color: var(--success);
+  font-weight: 600;
+}
+
+.table-wrap td.neg {
+  color: var(--text3);
+}
+
+.table-wrap td.mar-col {
+  font-weight: 600;
+  color: var(--text);
+}
+
+footer {
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+  font-size: 0.7rem;
+  color: var(--text3);
+  line-height: 1.6;
+}
+
+@media (max-width: 700px) {
+  .inputs-grid { grid-template-columns: 1fr; }
+  .metrics-grid { grid-template-columns: repeat(2, 1fr); }
+  .input-row label { min-width: 130px; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>Sales rep payback calculator</h1>
+    <p>Models the full chain: rep ramp &rarr; org close &rarr; referrer adoption (with 3-bucket churn) &rarr; patient funnel &rarr; cumulative GP vs cost.</p>
+  </header>
+
+  <div class="section-label">Assumptions</div>
+  <div class="card">
+    <div class="inputs-grid">
+      <div class="input-row">
+        <label>Rep level</label>
+        <select id="level" onchange="recalc()">
+          <option value="16125">L2 — $16,125/mo</option>
+          <option value="18060">L3 — $18,060/mo</option>
+          <option value="21500" selected>L4 — $21,500/mo</option>
+          <option value="25800">L5 — $25,800/mo</option>
+        </select>
+      </div>
+      <div class="input-row">
+        <label>QPs per ramped FTE/mo</label>
+        <input type="range" min="1" max="4" step="0.5" value="2" id="qps" oninput="recalc()">
+        <span class="val" id="qps_o">2.0</span>
+      </div>
+      <div class="input-row">
+        <label>QP to closed CVR</label>
+        <input type="range" min="10" max="50" step="5" value="25" id="cvr" oninput="recalc()">
+        <span class="val" id="cvr_o">25%</span>
+      </div>
+      <div class="input-row">
+        <label>Months QP to launch</label>
+        <input type="range" min="1" max="6" step="1" value="2" id="lag" oninput="recalc()">
+        <span class="val" id="lag_o">2</span>
+      </div>
+      <div class="input-row">
+        <label>Refs per org (steady)</label>
+        <input type="range" min="5" max="60" step="1" value="24" id="refs" oninput="recalc()">
+        <span class="val" id="refs_o">24</span>
+      </div>
+      <div class="input-row">
+        <label>Gross churn % (monthly)</label>
+        <input type="range" min="10" max="70" step="1" value="45" id="gchurn" oninput="recalc()">
+        <span class="val" id="gchurn_o">45%</span>
+      </div>
+      <div class="input-row">
+        <label>Net churn % (monthly)</label>
+        <input type="range" min="5" max="40" step="1" value="16" id="nchurn" oninput="recalc()">
+        <span class="val" id="nchurn_o">16%</span>
+      </div>
+      <div class="input-row">
+        <label>Leads per referrer/mo</label>
+        <input type="range" min="1" max="5" step="0.1" value="2.6" id="lpr" oninput="recalc()">
+        <span class="val" id="lpr_o">2.6</span>
+      </div>
+      <div class="input-row">
+        <label>Lead to confirmed CVR</label>
+        <input type="range" min="5" max="40" step="1" value="20" id="lcvr" oninput="recalc()">
+        <span class="val" id="lcvr_o">20%</span>
+      </div>
+      <div class="input-row">
+        <label>Net rev per patient/mo</label>
+        <input type="range" min="30" max="80" step="5" value="55" id="rev" oninput="recalc()">
+        <span class="val" id="rev_o">$55</span>
+      </div>
+      <div class="input-row">
+        <label>Gross margin %</label>
+        <input type="range" min="40" max="80" step="5" value="65" id="gm" oninput="recalc()">
+        <span class="val" id="gm_o">65%</span>
+      </div>
+      <div class="input-row">
+        <label>Org lifetime (months)</label>
+        <input type="range" min="12" max="48" step="6" value="24" id="orglife" oninput="recalc()">
+        <span class="val" id="orglife_o">24</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-label">Results</div>
+  <div class="metrics-grid">
+    <div class="metric-card highlight"><div class="m-label">Payback month</div><div class="m-value" id="m_payback">—</div></div>
+    <div class="metric-card"><div class="m-label">MAR at payback</div><div class="m-value" id="m_mar">—</div></div>
+    <div class="metric-card"><div class="m-label">Cum GP at payback</div><div class="m-value" id="m_gp">—</div></div>
+    <div class="metric-card"><div class="m-label">Cum cost at payback</div><div class="m-value" id="m_cost">—</div></div>
+  </div>
+
+  <div class="section-label">Org-level unit economics</div>
+  <div class="metrics-grid">
+    <div class="metric-card"><div class="m-label">Org CAC (simple)</div><div class="m-value" id="m_org_cac">—</div></div>
+    <div class="metric-card"><div class="m-label">Org LTV</div><div class="m-value" id="m_org_ltv">—</div><div class="m-sub" id="m_org_ltv_sub" style="font-size:0.6rem;color:var(--text3);margin-top:2px"></div></div>
+    <div class="metric-card highlight"><div class="m-label">LTV : CAC</div><div class="m-value" id="m_ltv_cac">—</div></div>
+    <div class="metric-card"><div class="m-label">Patient LTV</div><div class="m-value" id="m_pat_ltv">—</div></div>
+  </div>
+
+  <div class="card">
+    <div class="legend">
+      <span><span class="dot" style="background:#1D6B4F"></span>Cumulative gross profit</span>
+      <span><span class="dot" style="background:#C43C3C"></span>Cumulative rep cost</span>
+    </div>
+    <div class="chart-wrap"><canvas id="chart"></canvas></div>
+  </div>
+
+  <div class="section-label">Monthly breakdown</div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr>
+        <th>Mo</th><th>New refs</th><th>Existing</th><th>Winback</th><th>Total MAR</th>
+        <th>New pts</th><th>Active pts</th><th>Mo GP</th><th>Cum GP</th><th>Cum cost</th><th>Net</th>
+      </tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+
+  <footer>
+    Org CAC = monthly rep cost &divide; orgs closed per month at steady state. Org LTV = total referrer-months over org lifetime &times; leads/ref &times; lead CVR &times; patient LTV. Patient LTV = net rev/patient &times; GM &times; sum of retention curve.<br>
+    Model: Rep ramp (4 mo) &rarr; QP generation &rarr; org close (lagged) &rarr; referrer adoption (6 mo curve) &rarr; 3-bucket MAR (new / gross retained / winback) &rarr; lead generation &rarr; patient conversion &rarr; patient retention (24-mo curve) &rarr; revenue &rarr; GP accumulation vs cost.<br>
+    Referrer churn: Total MAR[t] = New[t] + MAR[t-1] &times; gross retention + MAR[t-1] &times; winback rate. Equivalent to: New[t] + MAR[t-1] &times; net retention.
+  </footer>
+</div>
+
+<script>
+const repRamp = [0, 0.2, 0.6, 1];
+const adoption = [0.097, 0.729, 0.755, 0.894, 0.939, 1.0];
+const patRetention = [1,.75,.616,.532,.473,.429,.398,.378,.357,.338,.323,.31,.297,.283,.272,.261,.253,.243,.235,.227,.221,.216,.209,.207];
+
+let myChart = null;
+
+function recalc() {
+  const cost = +document.getElementById('level').value;
+  const qps = +document.getElementById('qps').value;
+  const cvr = +document.getElementById('cvr').value / 100;
+  const lag = +document.getElementById('lag').value;
+  const refsPerOrg = +document.getElementById('refs').value;
+  const grossChurn = +document.getElementById('gchurn').value / 100;
+  const netChurn = +document.getElementById('nchurn').value / 100;
+  const lpr = +document.getElementById('lpr').value;
+  const lcvr = +document.getElementById('lcvr').value / 100;
+  const revPerPat = +document.getElementById('rev').value;
+  const gm = +document.getElementById('gm').value / 100;
+
+  const grossRet = 1 - grossChurn;
+  const winbackRate = Math.max(grossChurn - netChurn, 0);
+
+  document.getElementById('qps_o').textContent = qps.toFixed(1);
+  document.getElementById('cvr_o').textContent = Math.round(cvr*100)+'%';
+  document.getElementById('lag_o').textContent = lag;
+  document.getElementById('refs_o').textContent = refsPerOrg;
+  document.getElementById('gchurn_o').textContent = Math.round(grossChurn*100)+'%';
+  document.getElementById('nchurn_o').textContent = Math.round(netChurn*100)+'%';
+  document.getElementById('lpr_o').textContent = lpr.toFixed(1);
+  document.getElementById('lcvr_o').textContent = Math.round(lcvr*100)+'%';
+  document.getElementById('rev_o').textContent = '$'+revPerPat;
+  document.getElementById('gm_o').textContent = Math.round(gm*100)+'%';
+
+  const orgLife = +document.getElementById('orglife').value;
+  document.getElementById('orglife_o').textContent = orgLife;
+
+  const MONTHS = 60;
+
+  let rampedFTE = [];
+  for (let m = 0; m < MONTHS; m++) rampedFTE.push(m < 4 ? repRamp[m] : 1);
+
+  let qpsGen = rampedFTE.map(r => r * qps);
+  let orgsClosed = new Array(MONTHS).fill(0);
+  for (let m = 0; m < MONTHS; m++) {
+    let srcM = m - lag;
+    if (srcM >= 0) orgsClosed[m] = qpsGen[srcM] * cvr;
+  }
+
+  let refsAvail = orgsClosed.map(o => o * refsPerOrg);
+
+  let newRefs = new Array(MONTHS).fill(0);
+  for (let m = 0; m < MONTHS; m++) {
+    let total = 0;
+    for (let a = 0; a < 6; a++) {
+      let srcM = m - a;
+      if (srcM >= 0) total += refsAvail[srcM] * adoption[a];
+    }
+    newRefs[m] = total;
+  }
+
+  let totalMAR = new Array(MONTHS).fill(0);
+  let existing = new Array(MONTHS).fill(0);
+  let winback = new Array(MONTHS).fill(0);
+
+  for (let m = 0; m < MONTHS; m++) {
+    if (m > 0) {
+      existing[m] = totalMAR[m-1] * grossRet;
+      winback[m] = totalMAR[m-1] * winbackRate;
+    }
+    totalMAR[m] = newRefs[m] + existing[m] + winback[m];
+  }
+
+  let newPatients = totalMAR.map(mar => mar * lpr * lcvr);
+
+  let activePatients = new Array(MONTHS).fill(0);
+  for (let m = 0; m < MONTHS; m++) {
+    let total = 0;
+    for (let c = 0; c <= m; c++) {
+      let age = m - c;
+      let ret = age < patRetention.length ? patRetention[age] : patRetention[patRetention.length - 1];
+      total += newPatients[c] * ret;
+    }
+    activePatients[m] = total;
+  }
+
+  let cumGP = 0, cumCost = 0, paybackMo = null;
+  let rows = [];
+  let chartGP = [], chartCost = [], chartLabels = [];
+
+  for (let m = 0; m < MONTHS; m++) {
+    let moGP = activePatients[m] * revPerPat * gm;
+    cumGP += moGP;
+    cumCost += cost;
+    let net = cumGP - cumCost;
+    if (net >= 0 && !paybackMo) paybackMo = m + 1;
+
+    rows.push({ m: m+1, newRefs: newRefs[m], existing: existing[m], winback: winback[m],
+      mar: totalMAR[m], newPats: newPatients[m], actPats: activePatients[m],
+      moGP, cumGP, cumCost, net });
+
+    chartLabels.push(m+1);
+    chartGP.push(Math.round(cumGP));
+    chartCost.push(Math.round(cumCost));
+  }
+
+  if (paybackMo) {
+    let pb = rows[paybackMo - 1];
+    document.getElementById('m_payback').textContent = 'Mo ' + paybackMo;
+    document.getElementById('m_mar').textContent = Math.round(pb.mar).toLocaleString();
+    document.getElementById('m_gp').textContent = '$' + Math.round(pb.cumGP).toLocaleString();
+    document.getElementById('m_cost').textContent = '$' + Math.round(pb.cumCost).toLocaleString();
+  } else {
+    document.getElementById('m_payback').textContent = '60+';
+    document.getElementById('m_mar').textContent = Math.round(rows[59].mar).toLocaleString();
+    document.getElementById('m_gp').textContent = '$' + Math.round(rows[59].cumGP).toLocaleString();
+    document.getElementById('m_cost').textContent = '$' + Math.round(rows[59].cumCost).toLocaleString();
+  }
+
+  // --- Org-level CAC & LTV ---
+  const orgsPerMonth = qps * cvr; // at steady state
+  const orgCAC = orgsPerMonth > 0 ? cost / orgsPerMonth : 0;
+
+  // Single org referrer trajectory over orgLife months (with churn)
+  let orgRefs = [];
+  for (let t = 0; t < orgLife; t++) {
+    if (t === 0) {
+      orgRefs.push(refsPerOrg * adoption[0]);
+    } else if (t <= 5) {
+      let prev = orgRefs[t-1];
+      let newIncr = refsPerOrg * Math.max(adoption[t] - adoption[t-1], 0);
+      orgRefs.push(prev * (1 - netChurn) + newIncr);
+    } else {
+      orgRefs.push(orgRefs[t-1] * (1 - netChurn));
+    }
+  }
+  const totalRefMonths = orgRefs.reduce((a,b) => a+b, 0);
+
+  const totalOrgPatients = totalRefMonths * lpr * lcvr;
+
+  // Patient LTV = rev * GM * sum of retention curve over org lifetime
+  const retLen = Math.min(orgLife, patRetention.length);
+  let patLTV = 0;
+  for (let i = 0; i < retLen; i++) patLTV += revPerPat * gm * patRetention[i];
+
+  // Org LTV = total patients from org * patient LTV
+  const orgLTV = totalOrgPatients * patLTV;
+
+  const ltvCac = orgCAC > 0 ? orgLTV / orgCAC : 0;
+
+  document.getElementById('m_org_cac').textContent = '$' + Math.round(orgCAC).toLocaleString();
+  document.getElementById('m_org_ltv').textContent = '$' + Math.round(orgLTV).toLocaleString();
+  document.getElementById('m_org_ltv_sub').textContent = Math.round(totalRefMonths) + ' ref-months, ' + Math.round(totalOrgPatients) + ' patients';
+  document.getElementById('m_ltv_cac').textContent = ltvCac.toFixed(1) + 'x';
+  document.getElementById('m_pat_ltv').textContent = '$' + Math.round(patLTV).toLocaleString();
+
+  let displayMonths = paybackMo ? Math.min(paybackMo + 8, 60) : 60;
+  if (myChart) myChart.destroy();
+  myChart = new Chart(document.getElementById('chart'), {
+    type: 'line',
+    data: {
+      labels: chartLabels.slice(0, displayMonths),
+      datasets: [
+        { label: 'Cum GP', data: chartGP.slice(0, displayMonths), borderColor: '#1D6B4F', backgroundColor: 'rgba(29,107,79,0.06)', fill: true, borderWidth: 2, pointRadius: 0, tension: 0.3 },
+        { label: 'Cum cost', data: chartCost.slice(0, displayMonths), borderColor: '#C43C3C', borderWidth: 2, borderDash: [6,3], pointRadius: 0, fill: false }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: ctx => ctx.dataset.label + ': $' + ctx.parsed.y.toLocaleString() } }
+      },
+      scales: {
+        x: { title: { display: true, text: 'Month', font: { family: 'DM Sans', size: 11 } }, ticks: { font: { size: 10 }, maxTicksLimit: 15 }, grid: { color: 'rgba(0,0,0,0.04)' } },
+        y: { title: { display: true, text: '', font: { family: 'DM Sans', size: 11 } }, ticks: { font: { size: 10 }, callback: v => '$' + (v/1000).toFixed(0) + 'K' }, grid: { color: 'rgba(0,0,0,0.04)' } }
+      }
+    }
+  });
+
+  let showMonths = paybackMo ? Math.min(paybackMo + 6, 60) : 40;
+  let html = '';
+  for (let i = 0; i < showMonths; i++) {
+    let r = rows[i];
+    let cls = r.net >= 0 ? ' class="brk"' : '';
+    html += `<tr${cls}>
+      <td>${r.m}</td>
+      <td>${r.newRefs.toFixed(1)}</td>
+      <td>${r.existing.toFixed(1)}</td>
+      <td>${r.winback.toFixed(1)}</td>
+      <td class="mar-col">${r.mar.toFixed(1)}</td>
+      <td>${Math.round(r.newPats)}</td>
+      <td>${Math.round(r.actPats)}</td>
+      <td>$${Math.round(r.moGP).toLocaleString()}</td>
+      <td>$${Math.round(r.cumGP).toLocaleString()}</td>
+      <td>$${Math.round(r.cumCost).toLocaleString()}</td>
+      <td class="${r.net>=0?'pos':'neg'}">$${Math.round(r.net).toLocaleString()}</td>
+    </tr>`;
+  }
+  document.getElementById('tbody').innerHTML = html;
+}
+
+recalc();
+</script>
+</body>
+</html>
